@@ -15,6 +15,7 @@ class Synchronizer
     private static string LogFilePath;
     private static int SynchInterval;
     private static SyncTimeUnit SelectedTimeUnit;
+    private static DateTime SyncStart;
 
     static void Main(string[] args)
     {
@@ -213,6 +214,7 @@ class Synchronizer
     static void RunSync()
     {
         SaveLogLine(Constants.SYNCH_STARTED);
+        SyncStart = DateTime.Now;
 
         CheckDeletedDirectories();
         CheckAddedDirectories();
@@ -375,6 +377,17 @@ class Synchronizer
                 case SyncTimeUnit.Days:
                     nextSync = TimeSpan.FromDays(SynchInterval);
                     break;
+            }
+
+            // subtract elapsed time during synchronize from time until next sync;
+            TimeSpan duration = DateTime.Now - SyncStart;
+            if(duration < nextSync)
+            {
+                nextSync = nextSync - duration;
+            } else
+            {
+                // if <= 0, start immediately
+                nextSync = TimeSpan.Zero;
             }
 
             String message = Constants.SUCCESS_NEXT_SYNCH + " " + DateTime.Now.Add(nextSync).ToString("yyyy-MM-dd HH:mm:ss");
